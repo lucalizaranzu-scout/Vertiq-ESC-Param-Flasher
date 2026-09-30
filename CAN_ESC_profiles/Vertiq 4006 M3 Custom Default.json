@@ -1,0 +1,434 @@
+[
+    {
+        "descriptor": "advanced_vertiq_40xx_speed",
+        "Entries": [
+            {
+                "descriptor": "Allow DSHOT Disarming Message",
+                "readable_value": "Allow Message",
+                "value": 1
+            },
+            {
+                "descriptor": "Always Armed",
+                "readable_value": "Normal Arming",
+                "value": 0
+            },
+            {
+                "descriptor": "Arming State",
+                "readable_value": "Disarmed",
+                "value": 0
+            },
+            {
+                "descriptor": "Arming by DroneCAN ArmingStatus",
+                "readable_value": "Enabled",
+                "value": 1
+            },
+            {
+                "descriptor": "Current Max",
+                "value": 70
+            },
+            {
+                "descriptor": "DroneCAN Bitrate",
+                "readable_value": "1000000",
+                "value": 1000000
+            },
+            {
+                "descriptor": "DroneCAN Bypass Arming",
+                "readable_value": "Normal Arming",
+                "value": 0
+            },
+            {
+                "descriptor": "DroneCAN Telemetry Style",
+                "readable_value": "Use New-Style Telemetry",
+                "value": 0
+            },
+            {
+                "descriptor": "Hobby Calibrated Communication Protocol",
+                "readable_value": "No Calibration",
+                "value": 0
+            },
+            {
+                "descriptor": "Hobby Calibration High",
+                "value": 0
+            },
+            {
+                "descriptor": "Hobby Calibration Low",
+                "value": 0
+            },
+            {
+                "descriptor": "Maximum Angular Velocity",
+                "value": 9998.2
+            },
+            {
+                "descriptor": "Module ID",
+                "value": 3
+            },
+            {
+                "descriptor": "Motoring Supply Current Limit",
+                "value": 1000
+            },
+            {
+                "descriptor": "Motoring Supply Current Limit Ki",
+                "value": 0.04
+            },
+            {
+                "descriptor": "Motoring Supply Current Limit Kp",
+                "value": 0.1
+            },
+            {
+                "descriptor": "Play Arming Song on Arm",
+                "readable_value": "Play Arming Song",
+                "value": 1
+            },
+            {
+                "descriptor": "Power Filter Cutoff",
+                "value": 50
+            },
+            {
+                "descriptor": "Regenerating Supply Current Limit",
+                "value": -1000
+            },
+            {
+                "descriptor": "Regenerating Supply Current Limit Ki",
+                "value": 0
+            },
+            {
+                "descriptor": "Regenerating Supply Current Limit Kp",
+                "value": 0.1
+            },
+            {
+                "descriptor": "Report Telemetry as Speed",
+                "readable_value": "Disabled",
+                "value": 0
+            },
+            {
+                "descriptor": "Revert to Factory Default Key 1",
+                "value": 0
+            },
+            {
+                "descriptor": "Revert to Factory Default Key 2",
+                "value": 0
+            },
+            {
+                "descriptor": "Speed Redline End",
+                "value": 2000
+            },
+            {
+                "descriptor": "Speed Redline Start",
+                "value": 1963
+            },
+            {
+                "descriptor": "Stopped Speed",
+                "value": 5
+            },
+            {
+                "descriptor": "Stopped Time",
+                "value": 1
+            },
+            {
+                "descriptor": "Stow Target Acceleration",
+                "value": 50
+            },
+            {
+                "descriptor": "Supply Current Limit Enable",
+                "readable_value": "Disabled",
+                "value": 0
+            },
+            {
+                "descriptor": "Temperature Filter Cutoff",
+                "value": 10
+            },
+            {
+                "descriptor": "Timeout Meaning",
+                "readable_value": "Error - End Disarmed",
+                "value": 0
+            },
+            {
+                "descriptor": "Timer Based Protocol RPM Reporting Style",
+                "readable_value": "Standard RPM",
+                "value": 0
+            },
+            {
+                "descriptor": "UART Baud Rate",
+                "readable_value": "115200",
+                "value": 115200
+            },
+            {
+                "descriptor": "Volts Limit",
+                "value": 27
+            },
+            {
+                "descriptor": "Volts Limit Starting Voltage",
+                "value": 26.5
+            },
+            {
+                "descriptor": "Volume Max",
+                "value": 0.4
+            },
+            {
+                "descriptor": "Zero Spin Throttle Percentage",
+                "value": 0
+            },
+            {
+                "descriptor": "Zero Spin Throttle Tolerance",
+                "value": 0
+            }
+        ]
+    },
+    {
+        "descriptor": "general_vertiq_40xx_speed",
+        "Entries": [
+            {
+                "descriptor": "Arm On Throttle",
+                "readable_value": "Do Not Arm On Throttle",
+                "value": 0
+            },
+            {
+                "descriptor": "Arm Throttle Lower Limit",
+                "value": 0
+            },
+            {
+                "descriptor": "Arm Throttle Upper Limit",
+                "value": 0.05
+            },
+            {
+                "descriptor": "Communication",
+                "readable_value": "Autodetect",
+                "value": 255
+            },
+            {
+                "descriptor": "Consecutive Arming Throttles to Arm",
+                "value": 5
+            },
+            {
+                "descriptor": "Consecutive Disarming Throttles to Disarm",
+                "value": 1
+            },
+            {
+                "descriptor": "Disarm Behavior",
+                "readable_value": "Coast",
+                "value": 0
+            },
+            {
+                "descriptor": "Disarm On Throttle",
+                "readable_value": "Do Not Disarm On Throttle",
+                "value": 0
+            },
+            {
+                "descriptor": "Disarm Song Playback Option",
+                "readable_value": "Play Once",
+                "value": 1
+            },
+            {
+                "descriptor": "Disarm Throttle Lower Limit",
+                "value": 0
+            },
+            {
+                "descriptor": "Disarm Throttle Upper Limit",
+                "value": 0
+            },
+            {
+                "descriptor": "DroneCAN ESC Index",
+                "value": 2
+            },
+            {
+                "descriptor": "DroneCAN Node ID",
+                "value": 103
+            },
+            {
+                "descriptor": "DroneCAN Telemetry Frequency",
+                "value": 1
+            },
+            {
+                "descriptor": "DroneCAN Throttle Priority",
+                "readable_value": "3",
+                "value": 3
+            },
+            {
+                "descriptor": "FC 2D/3D Mode",
+                "readable_value": "2D",
+                "value": 0
+            },
+            {
+                "descriptor": "Hobby Throttle Priority",
+                "readable_value": "1",
+                "value": 1
+            },
+            {
+                "descriptor": "Hold Stow",
+                "readable_value": "Coast When Stowed",
+                "value": 0
+            },
+            {
+                "descriptor": "IQUART Throttle Priority",
+                "readable_value": "2",
+                "value": 2
+            },
+            {
+                "descriptor": "Low Power Hold Allowed Target Error",
+                "value": 0.025
+            },
+            {
+                "descriptor": "Low Power Hold Max Brake Error",
+                "value": 0.2
+            },
+            {
+                "descriptor": "Mode",
+                "readable_value": "Velocity",
+                "value": 2
+            },
+            {
+                "descriptor": "Motor Direction",
+                "readable_value": "2D counter clockwise",
+                "value": 3
+            },
+            {
+                "descriptor": "RGB LED Blue",
+                "value": 200
+            },
+            {
+                "descriptor": "RGB LED Green",
+                "value": 25
+            },
+            {
+                "descriptor": "RGB LED Red",
+                "value": 20
+            },
+            {
+                "descriptor": "RGB LED Strobing Active",
+                "readable_value": "Inactive",
+                "value": 0
+            },
+            {
+                "descriptor": "RGB LED Strobing Pattern",
+                "value": 3435134976
+            },
+            {
+                "descriptor": "RGB LED Strobing Period",
+                "value": 2.5
+            },
+            {
+                "descriptor": "Safe Factor",
+                "value": 1
+            },
+            {
+                "descriptor": "Stow Target Angle",
+                "value": 0
+            },
+            {
+                "descriptor": "Stow Zero Angle",
+                "value": 0
+            },
+            {
+                "descriptor": "Throttle Control Value Index",
+                "readable_value": "Unconfigured",
+                "value": 255
+            },
+            {
+                "descriptor": "Timeout Behavior",
+                "readable_value": "Coast",
+                "value": 0
+            },
+            {
+                "descriptor": "Timeout Song Playback Option",
+                "readable_value": "Play Continuosly",
+                "value": 2
+            },
+            {
+                "descriptor": "White LED Intensity",
+                "value": 0
+            },
+            {
+                "descriptor": "White LED Strobing Active",
+                "readable_value": "Active",
+                "value": 1
+            },
+            {
+                "descriptor": "White LED Strobing Pattern",
+                "value": 3435134976
+            },
+            {
+                "descriptor": "White LED Strobing Period",
+                "value": 2.5
+            }
+        ]
+    },
+    {
+        "descriptor": "tuning_vertiq_40xx_speed",
+        "Entries": [
+            {
+                "descriptor": "Convection Thermal Conductivity Coefficient",
+                "value": 0.018
+            },
+            {
+                "descriptor": "DroneCAN Zero Behavior",
+                "readable_value": "Normal Controller",
+                "value": 2
+            },
+            {
+                "descriptor": "Input Filter Cutoff",
+                "value": 250
+            },
+            {
+                "descriptor": "Max Velocity",
+                "value": 1963
+            },
+            {
+                "descriptor": "Max Volts",
+                "value": 25.2
+            },
+            {
+                "descriptor": "Stow Kd",
+                "value": 0.01
+            },
+            {
+                "descriptor": "Stow Ki",
+                "value": 0
+            },
+            {
+                "descriptor": "Stow Kp",
+                "value": 4
+            },
+            {
+                "descriptor": "Throttle Source Timeout",
+                "value": 0.1
+            },
+            {
+                "descriptor": "Timeout",
+                "value": 1
+            },
+            {
+                "descriptor": "Velocity FF0",
+                "value": 0
+            },
+            {
+                "descriptor": "Velocity FF1",
+                "value": 0.0125
+            },
+            {
+                "descriptor": "Velocity FF2",
+                "value": 0
+            },
+            {
+                "descriptor": "Velocity Kd",
+                "value": 0
+            },
+            {
+                "descriptor": "Velocity Ki",
+                "value": 0
+            },
+            {
+                "descriptor": "Velocity Kp",
+                "value": 0.01
+            },
+            {
+                "descriptor": "Voltage Slew Limit",
+                "value": 10000
+            },
+            {
+                "descriptor": "Voltage Slew Limit Enable",
+                "readable_value": "Disabled",
+                "value": 0
+            }
+        ]
+    }
+]

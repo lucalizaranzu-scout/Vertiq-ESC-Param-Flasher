@@ -1,0 +1,6 @@
+# Zubax Babel USB-CAN adapter (SLCAN over USB CDC-ACM).
+# Lets the logged-in user open it without joining the dialout group, keeps
+# ModemManager from probing it as a modem, and adds a stable /dev/zubax-babel link.
+# Install: sudo cp udev/99-zubax-babel.rules /etc/udev/rules.d/
+#          sudo udevadm control --reload && sudo udevadm trigger
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1d50", ATTRS{idProduct}=="60c7", MODE="0660", GROUP="dialout", TAG+="uaccess", ENV{ID_MM_DEVICE_IGNORE}="1", SYMLINK+="zubax-babel"

@@ -1,0 +1,15 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Windows download metadata (created when copying files into WSL)
+*:Zone.Identifier
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Personal Claude Code settings
+.claude/settings.local.json
