@@ -45,6 +45,17 @@ prompt to share the device.
 ./run.sh --port /dev/ttyACM1
 ```
 
+To start it from the application menu instead of a terminal:
+
+```bash
+./install-launcher.sh             # adds "ESC Flasher" to the app menu
+./install-launcher.sh --desktop   # ...and an icon on the desktop
+./install-launcher.sh --uninstall
+```
+
+The launcher points at this checkout, so re-run it if you move the folder. When started
+this way, output goes to `~/.cache/esc-flasher.log`.
+
 Console version, and a raw CAN traffic dump for checking the adapter and bus:
 
 ```bash

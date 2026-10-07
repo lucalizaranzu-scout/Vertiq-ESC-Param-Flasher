@@ -5,7 +5,20 @@
 set -euo pipefail
 cd "$(dirname "$(readlink -f "$0")")"
 
-die() { echo "error: $*" >&2; exit 1; }
+die() {
+    echo "error: $*" >&2
+    if [[ -n ${log:-} ]]; then
+        notify-send "ESC Flasher failed to start" "$* (log: $log)" 2>/dev/null || true
+    fi
+    exit 1
+}
+
+# Started from the application menu (no terminal): keep output in a log file.
+if [[ ! -t 2 ]]; then
+    log="${XDG_CACHE_HOME:-$HOME/.cache}/esc-flasher.log"
+    mkdir -p "$(dirname "$log")"
+    exec >"$log" 2>&1
+fi
 
 if ! command -v python3 >/dev/null; then
     die "python3 is not installed (Debian/Ubuntu: sudo apt install python3)"
