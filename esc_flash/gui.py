@@ -5,7 +5,7 @@ import threading
 import tkinter as tk
 from tkinter import messagebox, scrolledtext, ttk
 
-from adapter import AdapterError, ensure_adapter
+from adapter import AdapterError, adapter_name, ensure_adapter
 from flasher import (DEFAULT_PROFILES, POSITION_NAMES, Cancelled, FlashError, Flasher, fmt, load_profiles,
                      select_positions)
 
@@ -167,7 +167,7 @@ class App:
             return
         self.port = port
         self.flasher = Flasher(port, self.targets, self, self.args.local_id)
-        self._post(self.adapter_label.configure, {"text": f"Adapter: Zubax Babel on {port}",
+        self._post(self.adapter_label.configure, {"text": f"Adapter: {adapter_name(port)} on {port}",
                                                   "foreground": COLORS["pass"]})
         self.status_(f"Connect a drone, power it, then press Flash all {len(self.targets)} motors.")
         self._post(self._busy, False)
@@ -261,7 +261,7 @@ class App:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--port", help="SLCAN device (default: find the Babel, attaching it under WSL)")
+    ap.add_argument("--port", help="SLCAN device or SocketCAN interface, e.g. /dev/ttyACM0 or can0 (default: find the Babel or a PEAK adapter)")
     ap.add_argument("--profiles", default=DEFAULT_PROFILES)
     ap.add_argument("--positions", help="only these positions, e.g. M2 or M1,M3")
     ap.add_argument("--local-id", type=int, default=127)

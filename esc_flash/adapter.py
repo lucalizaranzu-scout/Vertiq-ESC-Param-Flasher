@@ -1,6 +1,7 @@
-"""Locate the Zubax Babel's serial device. Under WSL2 the Babel is first
+"""Locate the CAN adapter: a Zubax Babel (SLCAN serial device) or a PEAK
+PCAN-USB (SocketCAN interface, e.g. can0). Under WSL2 the Babel is first
 attached from Windows with usbipd-win (bound once with a UAC prompt, then
-attached silently); on native Linux it is simply found by USB VID:PID."""
+attached silently); on native Linux both are simply found by USB vendor ID."""
 import glob
 import json
 import os
@@ -9,6 +10,9 @@ import subprocess
 import time
 
 BABEL_VID, BABEL_PID = "1d50", "60c7"
+PEAK_VID = "0c72"
+ARPHRD_CAN = "280"
+IP = "/usr/sbin/ip"
 USBIPD_PATHS = ["usbipd.exe", "/mnt/c/Program Files/usbipd-win/usbipd.exe"]
 
 
@@ -35,6 +39,38 @@ def find_tty():
         except OSError:
             continue
     return None
+
+
+def find_peak():
+    """Returns the SocketCAN interface name (e.g. can0) of the first PEAK adapter, or None."""
+    for net in sorted(glob.glob("/sys/class/net/*")):
+        try:
+            with open(os.path.join(net, "type")) as t, \
+                    open(os.path.join(net, "device", "..", "idVendor")) as v:
+                if t.read().strip() == ARPHRD_CAN and v.read().strip() == PEAK_VID:
+                    return os.path.basename(net)
+        except OSError:
+            continue
+    return None
+
+
+def is_socketcan(port):
+    return not port.startswith("/dev/")
+
+
+def adapter_name(port):
+    return "PEAK PCAN-USB" if is_socketcan(port) else "Zubax Babel"
+
+
+def set_can_bitrate(iface, bitrate):
+    """Brings a SocketCAN interface up at the given bitrate. Changing it needs root,
+    so this uses passwordless sudo for ip (install sudoers/esc-flasher-can, see README)."""
+    sudo = [] if os.geteuid() == 0 else ["sudo", "-n"]
+    for args in (["down"], ["type", "can", "bitrate", str(bitrate), "restart-ms", "100"], ["up"]):
+        out = subprocess.run(sudo + [IP, "link", "set", iface] + args, capture_output=True, text=True, timeout=10)
+        if out.returncode != 0:
+            raise AdapterError(f"Could not set {iface} to {bitrate} bit/s: {(out.stderr or out.stdout).strip()}. "
+                               f"Install sudoers/esc-flasher-can (see README)")
 
 
 def _usbipd():
@@ -79,8 +115,11 @@ def _wsl_attach(log):
 
 
 def ensure_adapter(log=print, timeout=15):
-    """Returns the Babel's tty path, attaching it through usbipd first under WSL."""
+    """Returns the Babel's tty path (attaching it through usbipd first under WSL),
+    or, when no Babel is present, a PEAK adapter's SocketCAN interface name."""
     tty = find_tty()
+    if tty is None and (iface := find_peak()):
+        return iface
     if tty is None and running_in_wsl():
         _wsl_attach(log)
         deadline = time.monotonic() + timeout
@@ -88,7 +127,7 @@ def ensure_adapter(log=print, timeout=15):
             time.sleep(0.25)
             tty = find_tty()
     if tty is None:
-        raise AdapterError("Zubax Babel not found. Is it plugged in?")
+        raise AdapterError("No CAN adapter found (Zubax Babel or PEAK PCAN-USB). Is it plugged in?")
     # udev may apply permissions a moment after the node appears.
     for _ in range(20):
         if os.access(tty, os.R_OK | os.W_OK):
