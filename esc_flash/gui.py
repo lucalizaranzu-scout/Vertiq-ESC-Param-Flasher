@@ -5,12 +5,34 @@ import threading
 import tkinter as tk
 from tkinter import messagebox, scrolledtext, ttk
 
-from adapter import AdapterError, ensure_adapter
+from adapter import AdapterError, adapter_name, ensure_adapter
 from flasher import (DEFAULT_PROFILES, POSITION_NAMES, Cancelled, FlashError, Flasher, fmt, load_profiles,
-                     select_positions)
+                     same_value, select_positions)
 
 DIRECTIONS = {3: "CCW", 4: "CW"}
 COLORS = {"idle": "#9aa0a6", "turn": "#f9ab00", "found": "#1a73e8", "pass": "#1e8e3e", "fail": "#d93025"}
+# Meanings of enumerated parameters, from Vertiq's DroneCAN protocol docs.
+VALUE_NAMES = {
+    "control_mode": {0: "PWM", 1: "Voltage", 2: "Velocity"},
+    "motor_direction": {0: "Unconfigured", 1: "3D CCW", 2: "3D CW", 3: "2D CCW", 4: "2D CW"},
+    "zero_behavior": {0: "Coast", 1: "Brake", 2: "Normal controller"},
+    "disarm_behavior": {0: "Coast", 1: "0V to coast", 2: "0V to brake", 3: "Stow"},
+    "disarm_song_option": {0: "Never", 1: "Once", 2: "Continuously"},
+    "hold_stow": {0: "Coast", 1: "Hold stow", 2: "Brake", 3: "Low power hold stow"},
+    "arm_with_arming_status": {0: "off", 1: "on"},
+    "arm_on_throttle": {0: "off", 1: "on"},
+}
+
+
+def describe(name, value):
+    if value is None:
+        return "—"
+    if name == "max_velocity":
+        return f"{fmt(value)} rad/s ({float(value) * 60 / 6.283185307:.0f} rpm)"
+    meaning = VALUE_NAMES.get(name, {}).get(int(value)) if float(value).is_integer() else None
+    return f"{fmt(value)} {meaning}" if meaning else fmt(value)
+
+
 # Grid cell for each place name, as seen from above with the nose at the top.
 GRID = {"top left": (0, 0), "top right": (0, 1), "bottom left": (1, 0), "bottom right": (1, 1)}
 
@@ -65,7 +87,7 @@ class App:
         self._cancel = threading.Event()
 
         root.title("ESC Flasher")
-        root.minsize(760, 760)
+        root.minsize(880, 760)
         top = ttk.Frame(root, padding=10)
         top.pack(fill="x")
         self.adapter_label = ttk.Label(top, text="Adapter: looking for Zubax Babel...")
@@ -74,7 +96,7 @@ class App:
                             f"DroneCAN", foreground="#5f6368").pack(side="right")
 
         self.status_label = ttk.Label(root, text="", font=("TkDefaultFont", 14, "bold"), padding=(10, 4),
-                                      wraplength=740)
+                                      wraplength=860)
         self.status_label.pack(fill="x")
 
         frame = ttk.Frame(root, padding=10)
@@ -89,19 +111,25 @@ class App:
         buttons = ttk.Frame(root, padding=(10, 0))
         buttons.pack(fill="x")
         self.start_btn = ttk.Button(buttons, text=f"Flash all {len(targets)} motors", command=self.start)
+        self.read_btn = ttk.Button(buttons, text="Read settings", command=self.read_settings)
         self.cancel_btn = ttk.Button(buttons, text="Cancel / Stop", command=self._cancel.set)
-        for w in (self.start_btn, self.cancel_btn):
+        for w in (self.start_btn, self.read_btn, self.cancel_btn):
             w.pack(side="left", padx=(0, 6))
 
         panes = ttk.PanedWindow(root, orient="vertical")
         panes.pack(fill="both", expand=True, padx=10, pady=10)
-        self.plan = ttk.Treeview(panes, columns=("pos", "param", "old", "new"), show="headings", height=6)
+        self.tabs = ttk.Notebook(panes)
+        self.plan = ttk.Treeview(self.tabs, columns=("pos", "param", "old", "new"), show="headings", height=6)
         for col, title, width in (("pos", "Motor", 60), ("param", "Parameter", 260),
                                   ("old", "Old", 120), ("new", "New", 120)):
             self.plan.heading(col, text=title)
             self.plan.column(col, width=width, anchor="w")
+        self.settings = ttk.Treeview(self.tabs, show="headings", height=6)
+        self.settings.tag_configure("diff", background="#fce8e6")
+        self.tabs.add(self.plan, text="Planned changes")
+        self.tabs.add(self.settings, text="ESC settings")
         self.log_box = scrolledtext.ScrolledText(panes, height=6, state="disabled", font=("TkFixedFont", 9))
-        panes.add(self.plan, weight=1)
+        panes.add(self.tabs, weight=1)
         panes.add(self.log_box, weight=1)
 
         self._busy(True)
@@ -124,7 +152,8 @@ class App:
 
     def _busy(self, busy):
         """While a job runs only Cancel is available; otherwise Start and verified spin tests are."""
-        self.start_btn.state(["disabled"] if busy or self.flasher is None else ["!disabled"])
+        for btn in (self.start_btn, self.read_btn):
+            btn.state(["disabled"] if busy or self.flasher is None else ["!disabled"])
         self.cancel_btn.state(["!disabled"] if busy else ["disabled"])
         for pos, tile in self.tiles.items():
             tile.spin_btn.state(["!disabled"] if not busy and pos in self.flashed else ["disabled"])
@@ -167,7 +196,7 @@ class App:
             return
         self.port = port
         self.flasher = Flasher(port, self.targets, self, self.args.local_id)
-        self._post(self.adapter_label.configure, {"text": f"Adapter: Zubax Babel on {port}",
+        self._post(self.adapter_label.configure, {"text": f"Adapter: {adapter_name(port)} on {port}",
                                                   "foreground": COLORS["pass"]})
         self.status_(f"Connect a drone, power it, then press Flash all {len(self.targets)} motors.")
         self._post(self._busy, False)
@@ -190,6 +219,44 @@ class App:
             self.log("==> DONE")
         else:
             self.log("==> NOT COMPLETE")
+
+    # ---- settings view
+
+    def read_settings(self):
+        self._job(self._read_settings)
+
+    def _read_settings(self):
+        escs, params = self.flasher.read_settings()
+        self._post(self._fill_settings, escs, params)
+        self.status_(f"Read settings from {len(escs)} ESC(s); rows that differ from a profile are highlighted.")
+
+    def _fill_settings(self, escs, params):
+        """One column per ESC, named by the position whose profile node ID it is on; one row per parameter."""
+        by_node = {t["uavcan_node_id"]: pos for pos, t in self.targets.items()}
+        cols = [f"n{nid}" for nid in sorted(escs)]
+        tree = self.settings
+        tree.delete(*tree.get_children())
+        tree.configure(columns=["param"] + cols)
+        tree.heading("param", text="Parameter")
+        tree.column("param", width=200, anchor="w")
+        for nid in sorted(escs):
+            pos = by_node.get(nid)
+            tree.heading(f"n{nid}", text=f"{pos} · node {nid}" if pos else f"node {nid} (no profile)")
+            tree.column(f"n{nid}", width=150, anchor="w")
+        names = list(next(iter(self.targets.values())))
+        names += sorted({n for p in params.values() for n in p} - set(names))
+        for name in names:
+            cells, diff = [], False
+            for nid in sorted(escs):
+                have = params[nid].get(name, (None, None))[1]
+                want = self.targets.get(by_node.get(nid), {}).get(name)
+                text = describe(name, have)
+                if want is not None and not same_value(have, want):
+                    text += f"  ≠ {describe(name, want)}"
+                    diff = True
+                cells.append(text)
+            tree.insert("", "end", values=[name] + cells, tags=("diff",) if diff else ())
+        self.tabs.select(self.settings)
 
     # ---- spin test
 
@@ -261,7 +328,7 @@ class App:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--port", help="SLCAN device (default: find the Babel, attaching it under WSL)")
+    ap.add_argument("--port", help="SLCAN device or SocketCAN interface, e.g. /dev/ttyACM0 or can0 (default: find the Babel or a PEAK adapter)")
     ap.add_argument("--profiles", default=DEFAULT_PROFILES)
     ap.add_argument("--positions", help="only these positions, e.g. M2 or M1,M3")
     ap.add_argument("--local-id", type=int, default=127)

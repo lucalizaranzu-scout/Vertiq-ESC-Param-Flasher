@@ -1,6 +1,7 @@
 # ESC Flasher
 
-Flashes Vertiq 4006 ESC profiles over DroneCAN through a Zubax Babel USB-CAN adapter.
+Flashes Vertiq 4006 ESC profiles over DroneCAN through a Zubax Babel or PEAK PCAN-USB
+USB-CAN adapter.
 For each drone, the operator turns each motor by hand so the tool learns which ESC sits
 at which position (M1–M4). The tool then writes that position's profile, saves, restarts
 the ESCs and reads everything back to verify it. A spin test afterwards checks each
@@ -15,7 +16,16 @@ Runs on native Linux and on WSL2.
   - Fedora: `sudo dnf install python3 python3-tkinter`
   - Arch: `sudo pacman -S python tk`
 - [uv](https://docs.astral.sh/uv/) (optional). `run.sh` uses it when present, otherwise `python3 -m venv` + pip.
-- A Zubax Babel (USB `1d50:60c7`)
+- A CAN adapter, either:
+  - a Zubax Babel (USB `1d50:60c7`), or
+  - a PEAK PCAN-USB / PCAN-USB FD (USB vendor `0c72`, native Linux only; uses the kernel's
+    built-in `peak_usb` driver and shows up as a SocketCAN interface such as `can0`)
+
+If both are plugged in, the Babel is used; pick the other with `--port`.
+
+The CAN bus needs a 120 Ω terminator at each end. With the flight controller removed, a bench
+drone may have none: a PEAK adapter has no built-in termination, and without it the tool sees no
+traffic at any bitrate. Put 120 Ω across CAN_H and CAN_L at the adapter end.
 
 ## Setup
 
@@ -31,6 +41,13 @@ sudo udevadm control --reload && sudo udevadm trigger
 
 or add yourself to the `dialout` group (`sudo usermod -aG dialout $USER`) and log out and back in.
 
+For a PEAK adapter, the tool changes the interface bitrate with `ip link`, which needs root.
+Allow it without a password (for members of `dialout`, so also join that group as above):
+
+```bash
+sudo install -m 0440 sudoers/esc-flasher-can /etc/sudoers.d/
+```
+
 ### WSL2
 
 Install [usbipd-win](https://github.com/dorssel/usbipd-win) on Windows (`winget install usbipd`).
@@ -43,6 +60,7 @@ prompt to share the device.
 ./run.sh                    # GUI; builds .venv on first run
 ./run.sh --positions M2     # only flash some positions
 ./run.sh --port /dev/ttyACM1
+./run.sh --port can0        # PEAK adapter
 ```
 
 To start it from the application menu instead of a terminal:
@@ -69,10 +87,11 @@ Console version, and a raw CAN traffic dump for checking the adapter and bus:
 | --- | --- |
 | `esc_flash/gui.py` | Tk operator GUI |
 | `esc_flash/flasher.py` | Flashing logic, and a console front end |
-| `esc_flash/adapter.py` | Finds the Babel; attaches it through usbipd under WSL |
+| `esc_flash/adapter.py` | Finds the Babel or a PEAK adapter; attaches the Babel through usbipd under WSL; sets the PEAK bitrate |
 | `CAN_ESC_profiles/` | IQ Control Center profile exports, one per position (`M<n>` in the file name) |
 | `probe.py` | Dumps raw CAN traffic |
 | `udev/` | udev rule for native Linux |
+| `sudoers/` | sudo rule for setting a PEAK adapter's bitrate |
 
 Only the profile settings the ESC exposes over DroneCAN are written (`PARAM_MAP` in
 `flasher.py`). The GUI shows how many profile settings it cannot apply.

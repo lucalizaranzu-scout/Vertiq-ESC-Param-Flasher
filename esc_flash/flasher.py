@@ -20,6 +20,9 @@ import sys
 import time
 
 import dronecan
+from dronecan.driver.socketcan import SocketCAN
+
+from adapter import AdapterError, is_socketcan, set_can_bitrate
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_PROFILES = os.path.join(HERE, "..", "CAN_ESC_profiles")
@@ -147,7 +150,13 @@ class Session:
     def set_bitrate(self, bitrate):
         if bitrate != self.bitrate:
             self.close()
-            self.node = dronecan.make_node(self.port, node_id=self.local_id, bitrate=bitrate)
+            if is_socketcan(self.port):
+                set_can_bitrate(self.port, bitrate)
+                # make_node would pick dronecan's python-can driver, which passes its receive
+                # timeout in ms where python-can expects seconds, so spin() overruns on a quiet bus.
+                self.node = dronecan.node.Node(SocketCAN(self.port), node_id=self.local_id)
+            else:
+                self.node = dronecan.make_node(self.port, node_id=self.local_id, bitrate=bitrate)
             self.bitrate = bitrate
 
     def call(self, payload, dest, timeout=0.5, retries=2):
@@ -319,6 +328,25 @@ class Flasher:
             h.remove()
             sess.close()
         return peak[0]
+
+    def read_settings(self):
+        """Reads every ESC's parameters without writing anything.
+        Returns ({nid: info}, {nid: {name: (kind, value)}})."""
+        sess = Session(self.port, self.bitrate, self.local_id)
+        try:
+            self.ui.status("Searching for the drone's CAN bus...")
+            seen = self._find_bus(sess)
+            self.ui.log(f"Bus is at {sess.bitrate} bit/s; nodes {sorted(seen)}")
+            escs = self._find_escs(sess, seen)
+            self.ui.status("Reading current parameters...")
+            params = {}
+            for nid in escs:
+                self._check_cancel()
+                params[nid] = sess.read_params(nid)
+            return escs, params
+        finally:
+            self.bitrate = sess.bitrate
+            sess.close()
 
     def _scan(self, sess, seconds):
         seen = {}
@@ -502,7 +530,7 @@ def select_positions(targets, spec):
 def main():
     from adapter import ensure_adapter
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--port", help="SLCAN device (default: find the Babel, attaching it under WSL)")
+    ap.add_argument("--port", help="SLCAN device or SocketCAN interface, e.g. /dev/ttyACM0 or can0 (default: find the Babel or a PEAK adapter)")
     ap.add_argument("--profiles", default=DEFAULT_PROFILES)
     ap.add_argument("--positions", help="only these positions, e.g. M2 or M1,M3")
     ap.add_argument("--local-id", type=int, default=127)
@@ -524,7 +552,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except FlashError as ex:
+    except (FlashError, AdapterError) as ex:
         sys.exit(str(ex))
     except KeyboardInterrupt:
         pass

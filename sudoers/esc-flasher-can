@@ -1,0 +1,4 @@
+# Lets members of dialout set the bitrate of a SocketCAN interface (PEAK PCAN-USB)
+# without a password; the ESC flasher switches bitrate while searching for ESCs.
+# Install: sudo install -m 0440 sudoers/esc-flasher-can /etc/sudoers.d/
+%dialout ALL=(root) NOPASSWD: /usr/sbin/ip link set can[0-9] down, /usr/sbin/ip link set can[0-9] up, /usr/sbin/ip link set can[0-9] type can bitrate *
